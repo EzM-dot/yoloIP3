@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: {{ backend_image }}
+    container_name: {{ app_name }}-backend
+    restart: always
+    env_file: ./backend/.env
+    ports:
+      - "{{ backend_port }}:{{ app_port }}"
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: {{ frontend_image }}
+    container_name: {{ app_name }}-frontend
+    restart: always
+    env_file: ./frontend/.env
+    ports:
+      - "{{ frontend_port }}:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  mongo:
+    image: {{ mongodb_image }}
+    container_name: {{ app_name }}-mongo
+    restart: always
+    ports:
+      - "{{ mongodb_port }}:27017"
+    volumes:
+      - {{ mongodb_volume }}:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  {{ mongodb_volume }}:

@@ -1,0 +1,60 @@
+---
+- name: Deploy YOLO Application Stack
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - group_vars/all.yml
+    - group_vars/{{ env }}.yml
+
+  pre_tasks:
+    - name: Ensure Docker network exists
+      docker_network:
+        name: "{{ app_name }}-network"
+        state: present
+      tags: [docker, network]
+
+  roles:
+    - role: common
+      tags: [common, system]
+    
+    - role: mongodb_container
+      tags: [mongodb, container, database]
+      when: "'database' in group_names or 'all' in group_names"
+
+    - role: backend_container
+      tags: [backend, container, app]
+      when: "'backend' in group_names or 'app' in group_names or 'all' in group_names"
+
+    - role: frontend_container
+      tags: [frontend, container, app]
+      when: "'frontend' in group_names or 'app' in group_names or 'all' in group_names"
+
+    - role: nginx
+      tags: [nginx, proxy]
+      when: "'proxy' in group_names or 'all' in group_names"
+
+    - role: dockerfiles
+      tags: [docker, reference]
+      when: docker_save_reference | default(true) | bool
+
+
+  post_tasks:
+    - name: Start application stack with Docker Compose
+      command: docker-compose -f {{ app_dir }}/docker-compose.yml up -d
+      args:
+        chdir: "{{ app_dir }}"
+      when: "'app' in group_names or 'all' in group_names"
+      tags: [docker, deploy]
+
+    - name: Verify application status
+      uri:
+        url: "http://localhost"
+        return_content: yes
+      register: app_status
+      until: app_status.status == 200
+      retries: 10
+      delay: 10
+      ignore_errors: yes
+      when: "'app' in group_names or 'all' in group_names"
+      tags: [verify]

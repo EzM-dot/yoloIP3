@@ -1,0 +1,46 @@
+---
+- name: Create backend directory structure
+  file:
+    path: "{{ app_dir }}/backend"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [backend, directories]
+
+- name: Create application directory structure
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [directories]
+
+- name: Copy backend source code
+  copy:
+    src: "{{ playbook_dir }}/../backend/"
+    dest: "{{ app_dir }}/backend"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [backend, files]
+
+- name: Create .env file for backend
+  template:
+    src: backend-env.j2
+    dest: "{{ app_dir }}/backend/.env"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: '0644'
+  tags: [backend, config]
+
+- name: Include Docker Compose configuration
+  include_tasks: docker.yml
+  tags: [docker, config]
+
+- name: Build backend Docker image
+  command: docker-compose -f {{ app_dir }}/docker-compose.yml build backend
+  args:
+    chdir: "{{ app_dir }}"
+  environment:
+    COMPOSE_DOCKER_CLI_BUILD: "1"
+    DOCKER_BUILDKIT: "1"
+  tags: [backend, docker, build]

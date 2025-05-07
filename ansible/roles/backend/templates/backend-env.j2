@@ -1,0 +1,10 @@
+
+MONGO_URI=mongodb://mongo:27017/{{ app_name }}
+
+PORT={{ backend_port }}
+NODE_ENV={{ env }}
+
+CORS_ORIGIN=*
+
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRE=30d

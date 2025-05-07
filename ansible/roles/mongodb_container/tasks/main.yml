@@ -1,0 +1,26 @@
+---
+- name: Ensure MongoDB data directory exists
+  file:
+    path: "{{ mongodb_data_dir }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: '0755'
+  tags: [mongodb, directories]
+
+- name: Create MongoDB Docker container
+  docker_container:
+    name: "{{ app_name }}-mongodb"
+    image: "{{ mongodb_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ mongodb_port }}:27017"
+    volumes:
+      - "{{ mongodb_data_dir }}:/data/db"
+    env:
+      MONGO_INITDB_ROOT_USERNAME: "{{ mongodb_root_username | default(omit) }}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{ mongodb_root_password | default(omit) }}"
+    networks:
+      - name: "{{ app_name }}-network"
+  tags: [mongodb, container]

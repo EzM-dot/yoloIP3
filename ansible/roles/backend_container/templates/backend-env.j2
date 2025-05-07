@@ -1,0 +1,14 @@
+# MongoDB Configuration
+MONGO_URI=mongodb://{% if mongodb_root_username is defined and mongodb_root_password is defined %}{{ mongodb_root_username }}:{{ mongodb_root_password }}@{% endif %}{{ app_name }}-mongodb:27017/{{ app_name }}?authSource=admin
+
+# Server Configuration
+PORT={{ app_port }}
+NODE_ENV={{ env }}
+HOST=0.0.0.0
+
+# CORS Configuration
+CORS_ORIGIN=*
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRE=30d

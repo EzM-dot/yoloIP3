@@ -1,0 +1,17 @@
+---
+
+env: development
+
+backend_image: "{{ app_name }}-backend-dev"
+backend_port: 5000
+
+frontend_image: "{{ app_name }}-frontend-dev"
+frontend_port: 3000
+
+mongodb_image: mongo:latest
+mongodb_volume: "{{ app_name }}_mongodb_data"
+
+api_endpoint: "http://localhost:{{ backend_port }}"
+
+debug: true
+log_level: debug

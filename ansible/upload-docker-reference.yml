@@ -1,0 +1,28 @@
+---
+- name: Upload Docker Reference Files to Docker Hub
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - group_vars/all.yml
+    - group_vars/{{ env }}.yml
+
+  tasks:
+    - name: Create archive of Docker reference files
+      archive:
+        path: "/home/{{ user }}/docker-reference/"
+        dest: "/tmp/docker-reference-{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.tar.gz"
+        format: gz
+      tags: [docker, reference]
+
+    - name: Display upload instructions
+      debug:
+        msg: |
+          To upload the Docker reference files to your Docker Hub account:
+          1. Go to Docker Hub (https://hub.docker.com/)
+          2. Create a new repository named 'yolo-reference-files'
+          3. Run the following commands:
+             docker login
+             docker import /tmp/docker-reference-*.tar.gz ezm-dot/yolo-reference-files:latest
+             docker push ezm-dot/yolo-reference-files:latest
+      tags: [docker, reference]

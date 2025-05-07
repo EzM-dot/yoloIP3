@@ -1,0 +1,34 @@
+---
+- name: Create frontend directory structure
+  file:
+    path: "{{ app_dir }}/frontend"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [frontend, directories]
+
+- name: Copy frontend source code
+  copy:
+    src: "{{ playbook_dir }}/../client/"
+    dest: "{{ app_dir }}/frontend"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [frontend, files]
+
+- name: Create .env file for frontend
+  template:
+    src: frontend-env.j2
+    dest: "{{ app_dir }}/frontend/.env"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: '0644'
+  tags: [frontend, config]
+
+- name: Build frontend Docker image
+  command: docker-compose -f {{ app_dir }}/docker-compose.yml build frontend
+  args:
+    chdir: "{{ app_dir }}"
+  environment:
+    COMPOSE_DOCKER_CLI_BUILD: "1"
+    DOCKER_BUILDKIT: "1"
+  tags: [frontend, docker, build]

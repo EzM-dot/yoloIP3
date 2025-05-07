@@ -1,0 +1,32 @@
+---
+# Application settings
+app_name: yolo-app
+user: ubuntu
+group: ubrant  # Default for Ubuntu Vagrant box
+app_port: 5000
+
+# GitHub Repository Settings
+github_repo: https://github.com/EzM-dot/yoloIP3.git
+github_branch: master  # using master branch
+
+frontend_port: 8083
+backend_port: 5000
+mongodb_port: 27017
+
+docker_compose_version: '1.29.2'
+docker_network: "{{ app_name }}-network"
+
+app_dir: /opt/{{ app_name }}
+
+mongodb_image: mongo:latest
+mongodb_data_dir: "{{ app_dir }}/mongodb/data"
+
+backend_image: "{{ app_name }}-backend"
+backend_build_context: "{{ app_dir }}/backend"
+
+frontend_image: "{{ app_name }}-frontend"
+frontend_build_context: "{{ app_dir }}/frontend"
+
+
+nginx_image: nginx:alpine
+nginx_conf_dir: "{{ app_dir }}/nginx/conf.d/{{ app_name }}"

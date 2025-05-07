@@ -1,0 +1,33 @@
+---
+- name: Deploy YOLO Application
+  hosts: all
+  become: true
+  vars_files:
+    - group_vars/all.yml
+    - group_vars/{{ env }}.yml
+
+  tasks:
+    - name: Include common tasks
+      include_role:
+        name: common
+      tags: [common, system]
+
+    - name: Deploy Backend
+      include_role:
+        name: backend
+      tags: [backend, app]
+
+    - name: Deploy Frontend
+      include_role:
+        name: frontend
+      tags: [frontend, app]
+
+    - name: Deploy MongoDB
+      include_role:
+        name: mongodb
+      tags: [mongodb, database]
+
+    - name: Configure Nginx as Reverse Proxy
+      include_role:
+        name: nginx
+      tags: [nginx, proxy]

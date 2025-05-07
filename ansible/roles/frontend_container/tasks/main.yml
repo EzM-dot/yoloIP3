@@ -1,0 +1,50 @@
+---
+- name: Create frontend directory
+  file:
+    path: "{{ app_dir }}/frontend"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [frontend, directories]
+
+- name: Copy frontend source code
+  copy:
+    src: "{{ playbook_dir }}/../client/"
+    dest: "{{ app_dir }}/frontend"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [frontend, files]
+
+- name: Create frontend .env file
+  template:
+    src: frontend-env.j2
+    dest: "{{ app_dir }}/frontend/.env"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: '0644'
+  tags: [frontend, config]
+
+- name: Build frontend Docker image
+  docker_image:
+    name: "{{ frontend_image }}"
+    build:
+      path: "{{ app_dir }}/frontend"
+      dockerfile: Dockerfile
+    source: build
+    force_source: yes
+    state: present
+  tags: [frontend, docker, build]
+
+- name: Create frontend container
+  docker_container:
+    name: "{{ app_name }}-frontend"
+    image: "{{ frontend_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ frontend_port }}:80"  # Maps host port 8083 to container port 80
+    networks:
+      - name: "{{ app_name }}-network"
+    depends_on:
+      - "{{ app_name }}-backend"
+  tags: [frontend, container]

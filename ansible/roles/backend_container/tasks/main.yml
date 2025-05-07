@@ -1,0 +1,51 @@
+---
+- name: Create backend directory
+  file:
+    path: "{{ app_dir }}/backend"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [backend, directories]
+
+- name: Copy backend source code
+  copy:
+    src: "{{ playbook_dir }}/../backend/"
+    dest: "{{ app_dir }}/backend"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+  tags: [backend, files]
+
+- name: Create backend .env file
+  template:
+    src: backend-env.j2
+    dest: "{{ app_dir }}/backend/.env"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: '0644'
+  tags: [backend, config]
+
+- name: Build backend Docker image
+  docker_image:
+    name: "{{ backend_image }}"
+    build:
+      path: "{{ app_dir }}/backend"
+      dockerfile: Dockerfile
+    source: build
+    force_source: yes
+    state: present
+  tags: [backend, docker, build]
+
+- name: Create backend container
+  docker_container:
+    name: "{{ app_name }}-backend"
+    image: "{{ backend_image }}"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ backend_port }}:{{ app_port }}"
+    env_file: "{{ app_dir }}/backend/.env"
+    networks:
+      - name: "{{ app_name }}-network"
+    depends_on:
+      - "{{ app_name }}-mongodb"
+  tags: [backend, container]
