@@ -1,0 +1,38 @@
+---
+# End-to-end tests for the e-commerce platform
+- name: Install test dependencies
+  pip:
+    name:
+      - pytest
+      - requests
+      - pytest-html
+    state: present
+
+- name: Create test directory
+  file:
+    path: /opt/ecommerce/tests
+    state: directory
+    mode: '0755'
+
+- name: Copy test files
+  copy:
+    src: ../../files/tests/
+    dest: /opt/ecommerce/tests
+
+- name: Run API tests
+  command: pytest /opt/ecommerce/tests/api/ -v --html=/opt/ecommerce/logs/api-test-results.html
+  register: api_test_results
+  changed_when: false
+  ignore_errors: yes
+
+- name: Run UI tests
+  command: pytest /opt/ecommerce/tests/ui/ -v --html=/opt/ecommerce/logs/ui-test-results.html
+  register: ui_test_results
+  changed_when: false
+  ignore_errors: yes
+
+- name: Display test results
+  debug:
+    msg:
+      - "API Tests: {{ api_test_results.rc == 0 | ternary('PASSED', 'FAILED') }}"
+      - "UI Tests: {{ ui_test_results.rc == 0 | ternary('PASSED', 'FAILED') }}"

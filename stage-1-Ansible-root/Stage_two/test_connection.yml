@@ -1,0 +1,16 @@
+---
+- name: Test Ansible Connection
+  hosts: local
+  gather_facts: true
+  tasks:
+    - name: Display system information
+      debug:
+        msg: "Hello from {{ ansible_hostname }}"
+
+    - name: Check Python version
+      debug:
+        msg: "Python version: {{ ansible_python.version }}"
+
+    - name: Check Ansible user
+      debug:
+        msg: "Running as user: {{ ansible_user_id }}"

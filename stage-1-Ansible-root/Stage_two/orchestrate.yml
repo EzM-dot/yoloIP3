@@ -1,0 +1,71 @@
+---
+- name: Provision infrastructure with Terraform
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Initialize Terraform
+      command: terraform init
+      args:
+        chdir: ./terraform
+      register: tf_init
+      changed_when: false
+
+    - name: Run Terraform apply
+      command: terraform apply -auto-approve
+      args:
+        chdir: ./terraform
+      register: tf_apply
+
+    - name: Get Terraform outputs
+      command: terraform output -json
+      args:
+        chdir: ./terraform
+      register: tf_output
+      changed_when: false
+
+    - name: Set instance IPs from Terraform output
+      set_fact:
+        instance_ips: "{{ tf_output.stdout | from_json | json_query('instance_ips.value') }}"
+
+- name: Configure servers with Ansible
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Include common role
+      include_role:
+        name: common
+
+    - name: Include docker role
+      include_role:
+        name: docker
+
+    - name: Include app_deployment role
+      include_role:
+        name: app_deployment
+
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    - name: Install required system packages
+      apt:
+        name:
+          - python3-pip
+          - docker.io
+          - docker-compose
+          - git
+        state: present
+
+    - name: Add current user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes

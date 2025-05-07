@@ -1,0 +1,5 @@
+---
+# Main tasks file for tests role
+- name: Include test execution tasks
+  include_tasks: run.yml
+  tags: [tests, run]

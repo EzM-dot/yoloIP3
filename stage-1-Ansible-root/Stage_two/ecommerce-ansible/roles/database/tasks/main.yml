@@ -1,0 +1,43 @@
+---
+- name: Create PostgreSQL data directory
+  file:
+    path: /opt/ecommerce/postgres_data
+    state: directory
+    mode: '0755'
+
+- name: Create Redis data directory
+  file:
+    path: /opt/ecommerce/redis_data
+    state: directory
+    mode: '0755'
+
+- name: Deploy PostgreSQL container
+  docker_container:
+    name: postgres
+    image: postgres:13
+    env:
+      POSTGRES_USER: "{{ db_user }}"
+      POSTGRES_PASSWORD: "{{ db_password }}"
+      POSTGRES_DB: "{{ db_name }}"
+    volumes:
+      - /opt/ecommerce/postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - name: ecommerce
+    restart_policy: unless-stopped
+    state: started
+
+- name: Deploy Redis container
+  docker_container:
+    name: redis
+    image: redis:6
+    command: redis-server --requirepass {{ redis_password }}
+    volumes:
+      - /opt/ecommerce/redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - name: ecommerce
+    restart_policy: unless-stopped
+    state: started

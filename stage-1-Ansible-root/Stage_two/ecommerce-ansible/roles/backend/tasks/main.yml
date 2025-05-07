@@ -1,0 +1,33 @@
+---
+# Backend service setup
+- name: Create backend directory
+  file:
+    path: /opt/ecommerce/backend
+    state: directory
+    mode: '0755'
+
+- name: Copy backend application code
+  copy:
+    src: ../../files/backend/
+    dest: /opt/ecommerce/backend
+
+- name: Create .env file for backend
+  template:
+    src: backend.env.j2
+    dest: /opt/ecommerce/backend/.env
+
+- name: Build and start backend container
+  docker_container:
+    name: backend
+    build:
+      path: /opt/ecommerce/backend
+      pull: yes
+    env_file: /opt/ecommerce/backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - /opt/ecommerce/backend:/app
+    networks:
+      - name: ecommerce
+    restart_policy: unless-stopped
+    state: started

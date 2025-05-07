@@ -1,0 +1,39 @@
+---
+- name: Initialize Terraform
+  command: terraform init
+  args:
+    chdir: "{{ playbook_dir }}/terraform"
+  register: tf_init
+
+- name: Run Terraform plan
+  command: >
+    terraform plan
+    -var="key_name={{ key_name }}"
+    -var="db_password={{ db_password }}"
+    -out=tfplan
+  args:
+    chdir: "{{ playbook_dir }}/terraform"
+  register: tf_plan
+  when: not check_mode
+
+- name: Apply Terraform configuration
+  command: terraform apply -auto-approve
+  args:
+    chdir: "{{ playbook_dir }}/terraform"
+  when: not check_mode
+  register: tf_apply
+
+- name: Get Terraform outputs
+  command: terraform output -json
+  args:
+    chdir: "{{ playbook_dir }}/terraform"
+  register: tf_output
+  changed_when: false
+
+- name: Update inventory with new instances
+  lineinfile:
+    path: "{{ playbook_dir }}/inventory.ini"
+    line: "{{ item }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_ed25519"
+    state: present
+  loop: "{{ tf_output.stdout | from_json | json_query('app_public_ips.value[*]') }}"
+  when: tf_output is defined and tf_output.stdout != ''

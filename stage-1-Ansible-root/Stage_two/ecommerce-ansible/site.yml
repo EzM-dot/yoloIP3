@@ -1,0 +1,38 @@
+---
+# Main playbook for e-commerce platform deployment
+- name: Provision infrastructure with Terraform
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Ensure Terraform is installed
+      include_role:
+        name: terraform
+        tasks_from: install.yml
+
+    - name: Initialize and apply Terraform configuration
+      include_role:
+        name: terraform
+        tasks_from: apply.yml
+
+- name: Configure Docker and deploy e-commerce platform
+  hosts: app_servers
+  become: true
+  gather_facts: true
+  roles:
+    - common
+    - docker
+    - database
+    - backend
+    - frontend
+    - nginx
+
+- name: Run tests
+  hosts: app_servers
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Run e2e tests
+      include_role:
+        name: tests
+        tasks_from: run.yml

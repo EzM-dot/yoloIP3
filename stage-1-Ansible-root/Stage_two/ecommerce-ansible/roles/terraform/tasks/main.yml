@@ -1,0 +1,9 @@
+---
+# Main tasks file for Terraform role
+- name: Include installation tasks
+  include_tasks: install.yml
+  tags: [terraform, install]
+
+- name: Include apply tasks
+  include_tasks: apply.yml
+  tags: [terraform, apply]

@@ -1,0 +1,33 @@
+---
+- name: Create frontend directory
+  file:
+    path: /opt/ecommerce/frontend
+    state: directory
+    mode: '0755'
+
+- name: Copy frontend application code
+  copy:
+    src: ../../files/frontend/
+    dest: /opt/ecommerce/frontend
+
+- name: Create .env file for frontend
+  template:
+    src: frontend.env.j2
+    dest: /opt/ecommerce/frontend/.env
+
+- name: Build and start frontend container
+  docker_container:
+    name: frontend
+    build:
+      path: /opt/ecommerce/frontend
+      pull: yes
+    env_file: /opt/ecommerce/frontend/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - /opt/ecommerce/frontend:/app
+      - /app/node_modules
+    networks:
+      - name: ecommerce
+    restart_policy: unless-stopped
+    state: started

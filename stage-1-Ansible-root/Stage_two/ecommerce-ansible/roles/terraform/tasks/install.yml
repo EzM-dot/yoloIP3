@@ -1,0 +1,28 @@
+---
+- name: Install required system packages
+  apt:
+    name:
+      - python3-pip
+      - unzip
+    state: present
+
+- name: Download Terraform
+  ansible.builtin.get_url:
+    url: https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip
+    dest: /tmp/terraform.zip
+    mode: '0755'
+
+- name: Unzip Terraform
+  unarchive:
+    src: /tmp/terraform.zip
+    dest: /usr/local/bin
+    remote_src: yes
+    mode: '0755'
+
+- name: Verify Terraform installation
+  command: terraform version
+  register: terraform_version
+  changed_when: false
+
+- debug:
+    msg: "Terraform {{ terraform_version.stdout }}"
