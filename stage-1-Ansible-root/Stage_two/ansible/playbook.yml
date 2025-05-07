@@ -1,0 +1,35 @@
+---
+- name: Configure application server
+  hosts: all
+  become: true
+  
+  roles:
+    - common
+    - docker
+    - app_deployment
+    
+  tasks:
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+        
+    - name: Install required system packages
+      apt:
+        name:
+          - python3-pip
+          - docker.io
+          - docker-compose
+          - git
+        state: present
+        
+    - name: Add current user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+        
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
