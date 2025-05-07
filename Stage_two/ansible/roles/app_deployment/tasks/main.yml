@@ -1,0 +1,35 @@
+---
+- name: Create application directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  with_items:
+    - /opt/app
+    - /opt/app/backend
+    - /opt/app/frontend
+
+- name: Clone application repositories
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.version | default('main') }}"
+  with_items:
+    - { repo: 'https://github.com/your-org/backend.git', dest: '/opt/app/backend' }
+    - { repo: 'https://github.com/your-org/frontend.git', dest: '/opt/app/frontend' }
+  when: item.repo is defined
+
+- name: Copy docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/app/docker-compose.yml
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Start application with docker-compose
+  command: docker-compose up -d
+  args:
+    chdir: /opt/app
+  register: docker_compose_output
+  changed_when: "'Recreating' in docker_compose_output.stdout or 'Creating' in docker_compose_output.stdout"

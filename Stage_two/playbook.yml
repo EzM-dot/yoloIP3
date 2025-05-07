@@ -1,0 +1,49 @@
+---
+- name: Initialize Terraform
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  tasks:
+    - name: Run terraform init
+      command: terraform init
+      args:
+        chdir: terraform/
+      register: tf_init
+      changed_when: false
+
+    - name: Run terraform validate
+      command: terraform validate
+      args:
+        chdir: terraform/
+      register: tf_validate
+      changed_when: false
+
+    - name: Run terraform plan
+      command: terraform plan -out=tfplan
+      args:
+        chdir: terraform/
+      register: tf_plan
+      changed_when: false
+
+    - name: Run terraform apply
+      command: terraform apply -auto-approve
+      args:
+        chdir: terraform/
+      register: tf_apply
+      changed_when: false
+
+- name: Configure application server
+  hosts: all
+  become: true
+  
+  pre_tasks:
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+      tags: [always]
+
+  roles:
+    - role: app_deployment
+      tags: [app_deployment]
